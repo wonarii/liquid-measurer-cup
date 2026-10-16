@@ -1,0 +1,104 @@
+Calibration calculations
+
+i'm just wingin it
+
+When nothing on plate:
+Reading: 512617
+Reading: 512675
+Reading: 512660
+Reading: 512501
+Reading: 512483
+Reading: 512407
+Reading: 512433
+Reading: 512517
+
+
+Reading: 512375
+Reading: 512447
+Reading: 512480
+Reading: 512465
+Reading: 512482
+Reading: 512630
+Reading: 512371
+Reading: 512445
+Reading: 512552
+Reading: 512482
+
+Average:512 500
+Min: 512371
+Max: 512675
+
+When 25g on plate:
+
+Reading: 526571
+Reading: 526609
+Reading: 526648
+Reading: 526705
+Reading: 526712
+Reading: 526503
+Reading: 526520
+Reading: 526758
+Reading: 526751
+Reading: 526579
+Reading: 526459
+Reading: 526725
+Reading: 526592
+
+Average:526626
+Min: 526503
+Max: 526758
+
+
+When 50g on plate:
+Reading: 535249
+Reading: 535506
+Reading: 535203
+Reading: 535094
+Reading: 535113
+Reading: 535130
+Reading: 535229
+
+Reading: 535011
+Reading: 535087
+Reading: 535351
+Reading: 535152
+Reading: 535132
+Reading: 535104
+Reading: 535248
+Reading: 535268
+
+Average:535183
+Min: 535011
+Max: 535351
+
+When 100g on plate:
+Reading: 552643
+Reading: 552758
+Reading: 552745
+Reading: 552916
+Reading: 552912
+Reading: 552625
+Reading: 552686
+Reading: 552766
+Reading: 552645
+Reading: 552616
+Reading: 552690
+Reading: 552896
+Reading: 552937
+Reading: 552660
+Reading: 552902
+Reading: 552879
+
+Average:552768
+Min: 552643
+Max: 552916
+
+
+And then if I math this out... 
+y=mx+b
+where m = 350 (about)
+and b = 512 500
+so 
+y = 350x + 512500
+
+Let's add this to the code
