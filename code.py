@@ -37,7 +37,7 @@ resetValue = 504700
 #512 500 at home
 #computation lab: 504700
 #how i calculate the mass
-slope = 1500 #used to be 350
+slope = 1500 
 
 # AUDIO
 
@@ -50,10 +50,11 @@ mixer = audiomixer.Mixer(sample_rate=44100, buffer_size=2048)
 synth = synthio.Synthesizer(sample_rate=44100)
 audio.play(mixer)
 mixer.voice[0].play(synth)
-mixer.voice[0].level = 0.1
+mixer.voice[0].level = 0.1 # volume
 
 #For the screaming
-note = 80 #jerome's preferred sound
+note = 80
+baseNote = 80 #jerome's preferred sound
 minTimeBeeps = 0.2 #when nothing on scale
 timeBetweenBeeps = 0.2
 maxTimeBeeps = 0.05 #when goal reached
@@ -123,26 +124,36 @@ def reset():
     targetmL = 0
 
 #play sound (starts the song
-    synth.press(resetSongNote1)  
+    synth.press(resetSongNote1)
+    time.sleep(0.2)
+    synth.release(resetSongNote1)  # release the note we pressed
+    synth.press(resetSongNote2) 
+    time.sleep(0.1)
+    synth.release(resetSongNote2)   
      
 
 #calibrate load cell
 
 #get a bunch of measures and add them up
     sumMeasures = 0
+    countedMeasures = 0
     for i in range(nbMeasure):
-        sumMeasures = channel_a.value + sumMeasures
+        #preventing weird readings
+        if channel_a.value < 700000:
+            sumMeasures = channel_a.value + sumMeasures
+            countedMeasures = countedMeasures +1
         time.sleep(0.1)
     #calculate the average and assign it to resetValue
-    resetValue = int(sumMeasures/nbMeasure)
+    print("Current value:")
+    print(sumMeasures/countedMeasures)
+    resetValue = int(sumMeasures/countedMeasures)
     print("value reset to:")
     print(resetValue)
-    time.sleep(2)
 
 #continue song
     synth.release(resetSongNote1)  # release the note we pressed
     synth.press(resetSongNote2) 
-    time.sleep(0.4)
+    time.sleep(0.1)
     synth.release(resetSongNote2)  # release the note we pressed
     synth.press(resetSongNote3)  
     time.sleep(0.2)
@@ -157,10 +168,10 @@ def add25(targetmL):
 
     #SOUND CUES
     synth.press(button25SongNote1)
-    time.sleep(0.2)
+    time.sleep(0.1)
     synth.release(button25SongNote1)  # release the note we pressed
     synth.press(button25SongNote2) 
-    time.sleep(0.3)
+    time.sleep(0.2)
     synth.release(button25SongNote2)  # release the note we pressed
 
     return targetmL
@@ -173,10 +184,10 @@ def add50(targetmL):
     
     #SOUND CUES
     synth.press(button50SongNote1)
-    time.sleep(0.2)
+    time.sleep(0.1)
     synth.release(button50SongNote1)  # release the note we pressed
     synth.press(button50SongNote2) 
-    time.sleep(0.3)
+    time.sleep(0.2)
     synth.release(button50SongNote2)  # release the note we pressed
 
     return targetmL
@@ -189,10 +200,10 @@ def add100(targetmL):
     
     #SOUND CUES
     synth.press(button100SongNote1)
-    time.sleep(0.2)
+    time.sleep(0.1)
     synth.release(button100SongNote1)  # release the note we pressed
     synth.press(button100SongNote2) 
-    time.sleep(0.3)
+    time.sleep(0.2)
     synth.release(button100SongNote2)  # release the note we pressed
     return targetmL
 
@@ -252,6 +263,8 @@ while True:
 	    newTimeBetweenBeeps = (100*mass/targetmL)*slopeTimeBeeps + minTimeBeeps
             if newTimeBetweenBeeps > 0:
                 timeBetweenBeeps = newTimeBetweenBeeps
+#every 10% i also want to up the note by 1
+                note = baseNote + (int)(10*mass/targetmL)
 	    print(timeBetweenBeeps)
 	#play sound
 	
