@@ -79,20 +79,37 @@ resetButton = digitalio.DigitalInOut(board.A0)
 resetButton.direction = digitalio.Direction.INPUT
 resetButton.pull = digitalio.Pull.UP
 
+#reset button song
+resetSongNote1 = 85
+resetSongNote2 = 65
+resetSongNote3 = 62
+
 #+25 BUTTON
 button25 = digitalio.DigitalInOut(board.A7) #RX
 button25.direction = digitalio.Direction.INPUT
 button25.pull = digitalio.Pull.UP
+
+#+25 button song
+button25SongNote1 = 75
+button25SongNote2 = 77
 
 #+50 BUTTON
 button50 = digitalio.DigitalInOut(board.SCK) #SCK
 button50.direction = digitalio.Direction.INPUT
 button50.pull = digitalio.Pull.UP
 
+#+50 button song
+button50SongNote1 = 78
+button50SongNote2 = 80
+
 #+100 BUTTON
 button100 = digitalio.DigitalInOut(board.TX) #A6
 button100.direction = digitalio.Direction.INPUT
 button100.pull = digitalio.Pull.UP
+
+#+100 button song
+button100SongNote1 = 81
+button100SongNote2 = 83
 
 #--------------------------CODE-----------------------------------------------------
 
@@ -104,6 +121,10 @@ def reset():
     print("reset")
 #reset the target amount
     targetmL = 0
+
+#play sound (starts the song
+    synth.press(resetSongNote1)  
+     
 
 #calibrate load cell
 
@@ -117,6 +138,15 @@ def reset():
     print("value reset to:")
     print(resetValue)
     time.sleep(2)
+
+#continue song
+    synth.release(resetSongNote1)  # release the note we pressed
+    synth.press(resetSongNote2) 
+    time.sleep(0.4)
+    synth.release(resetSongNote2)  # release the note we pressed
+    synth.press(resetSongNote3)  
+    time.sleep(0.2)
+    synth.release(resetSongNote3)  # release the note we pressed
     
     return 
 
@@ -124,7 +154,15 @@ def reset():
 def add25(targetmL):
     print("+25")
     targetmL = targetmL + 25
-    #ADD SOUND CUES
+
+    #SOUND CUES
+    synth.press(button25SongNote1)
+    time.sleep(0.2)
+    synth.release(button25SongNote1)  # release the note we pressed
+    synth.press(button25SongNote2) 
+    time.sleep(0.3)
+    synth.release(button25SongNote2)  # release the note we pressed
+
     return targetmL
 
 
@@ -132,7 +170,15 @@ def add25(targetmL):
 def add50(targetmL):
     print("+50")
     targetmL = targetmL + 50
-    #ADD SOUND CUES
+    
+    #SOUND CUES
+    synth.press(button50SongNote1)
+    time.sleep(0.2)
+    synth.release(button50SongNote1)  # release the note we pressed
+    synth.press(button50SongNote2) 
+    time.sleep(0.3)
+    synth.release(button50SongNote2)  # release the note we pressed
+
     return targetmL
 
 
@@ -140,7 +186,14 @@ def add50(targetmL):
 def add100(targetmL):
     print("+100")
     targetmL = targetmL + 100
-    #ADD SOUND CUES
+    
+    #SOUND CUES
+    synth.press(button100SongNote1)
+    time.sleep(0.2)
+    synth.release(button100SongNote1)  # release the note we pressed
+    synth.press(button100SongNote2) 
+    time.sleep(0.3)
+    synth.release(button100SongNote2)  # release the note we pressed
     return targetmL
 
 
@@ -206,10 +259,3 @@ while True:
         time.sleep(0.1)
         synth.release(note)  # release the note we pressed
         time.sleep(timeBetweenBeeps)
-	
-
-
-
-
-
-    
