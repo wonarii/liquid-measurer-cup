@@ -121,7 +121,7 @@ button100SongNote2 = 83
 def reset():
     print("reset")
 #reset the target amount
-    targetmL = 0
+    global targetmL = 0
 
 #play sound (starts the song
     synth.press(resetSongNote1)
@@ -150,6 +150,9 @@ def reset():
     print("value reset to:")
     print(resetValue)
 
+#Voice says Reinitialiser SOPHIE
+
+
 #continue song
     synth.release(resetSongNote1)  # release the note we pressed
     synth.press(resetSongNote2) 
@@ -159,7 +162,7 @@ def reset():
     time.sleep(0.2)
     synth.release(resetSongNote3)  # release the note we pressed
     
-    return 
+    return resetValue
 
 #-----------+25 BUTTON FUNCTION----------
 def add25(targetmL):
@@ -237,7 +240,7 @@ while True:
 
     if startupSequence == False:
         if not resetButton.value:   # pressed = False (pulled to GND)
-	    reset()
+	    resetValue = reset()
         if not button25.value:   # pressed = False (pulled to GND)
 	    targetmL = add25(targetmL)
         if not button50.value:   # pressed = False (pulled to GND)
