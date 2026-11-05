@@ -38,6 +38,7 @@ resetValue = 504700
 #computation lab: 504700
 #how i calculate the mass
 slope = 1500 
+mass = 0;
 
 # AUDIO
 
@@ -94,14 +95,15 @@ button25.pull = digitalio.Pull.UP
 button25SongNote1 = 75
 button25SongNote2 = 77
 
-#+50 BUTTON
-button50 = digitalio.DigitalInOut(board.SCK) #SCK
-button50.direction = digitalio.Direction.INPUT
-button50.pull = digitalio.Pull.UP
+#CONFIRM BUTTON
+buttonConfirm = digitalio.DigitalInOut(board.SCK) #SCK
+buttonConfirm.direction = digitalio.Direction.INPUT
+buttonConfirm.pull = digitalio.Pull.UP
 
-#+50 button song
-button50SongNote1 = 78
-button50SongNote2 = 80
+#CONFIRM BUTTON
+buttonConfirmSongNote1 = 78
+buttonConfirmSongNote2 = 80
+buttonConfirmSongNote3 = 82
 
 #+100 BUTTON
 button100 = digitalio.DigitalInOut(board.TX) #A6
@@ -120,8 +122,6 @@ button100SongNote2 = 83
 
 def reset():
     print("reset")
-#reset the target amount
-    global targetmL = 0
 
 #play sound (starts the song
     synth.press(resetSongNote1)
@@ -180,20 +180,30 @@ def add25(targetmL):
     return targetmL
 
 
-#-----------+50 BUTTON FUNCTION----------
-def add50(targetmL):
-    print("+50")
-    targetmL = targetmL + 50
+#-----------CONFIRM BUTTON FUNCTION----------
+def confirm(targetmL):
+    print("confirmed")
     
     #SOUND CUES
-    synth.press(button50SongNote1)
+    synth.press(buttonConfirmSongNote1)
     time.sleep(0.1)
-    synth.release(button50SongNote1)  # release the note we pressed
-    synth.press(button50SongNote2) 
+    synth.release(buttonConfirmSongNote1)  # release the note we pressed
+    synth.press(buttonConfirmSongNote2) 
     time.sleep(0.2)
-    synth.release(button50SongNote2)  # release the note we pressed
+    synth.release(buttonConfirmSongNote2)  # release the note we pressed
+    synth.press(buttonConfirmSongNote1)
+    time.sleep(0.1)
+    synth.release(buttonConfirmSongNote1)
+    synth.press(buttonConfirmSongNote3)
+    time.sleep(0.2)
+    synth.release(buttonConfirmSongNote3)
 
-    return targetmL
+# READ THE TARGET VALUE OUT LOUD
+#SOPHIE HERE
+# 4 space indentation to stay in the confirm function 
+#(use the targetmL value passed as a parameter)
+
+    return
 
 
 #-----------+100 BUTTON FUNCTION----------
@@ -241,10 +251,12 @@ while True:
     if startupSequence == False:
         if not resetButton.value:   # pressed = False (pulled to GND)
 	    resetValue = reset()
+            #reset the target amount
+            targetmL = 0
         if not button25.value:   # pressed = False (pulled to GND)
 	    targetmL = add25(targetmL)
-        if not button50.value:   # pressed = False (pulled to GND)
-	    targetmL = add50(targetmL)
+        if not buttonConfirm.value:   # pressed = False (pulled to GND)
+	    confirm(targetmL)
         if not button100.value:   # pressed = False (pulled to GND)
 	    targetmL = add100(targetmL)
         print(targetmL)
