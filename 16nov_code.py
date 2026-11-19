@@ -1,0 +1,339 @@
+#----------------------------------IMPORTS--------------------------------------------
+import time
+
+#For the load cell
+import board
+import digitalio
+
+#For sounds
+import array
+import math
+import audiocore
+import board
+import audiobusio
+
+#new synth stuff
+import synthio
+import audiomixer
+import math
+
+from adafruit_hx711.analog_in import AnalogIn
+from adafruit_hx711.hx711 import HX711
+
+#------------------------------VARIABLES------------------------------------------
+
+# LOAD CELL
+data = digitalio.DigitalInOut(board.SDA)
+data.direction = digitalio.Direction.INPUT
+clock = digitalio.DigitalInOut(board.SCL)
+clock.direction = digitalio.Direction.OUTPUT
+
+hx711 = HX711(data, clock)
+channel_a = AnalogIn(hx711, HX711.CHAN_A_GAIN_128)
+# channel_b = AnalogIn(hx711, HX711.CHAN_B_GAIN_32)
+
+#the average reading when there's nothing on the scale
+resetValue = 504700
+#512 500 at home
+#computation lab: 504700
+#how i calculate the mass
+slope = 1500 
+mass = 0
+
+# AUDIO
+
+#Audio synth
+audio = audiobusio.I2SOut(bit_clock=board.A3, word_select=board.A2, data=board.A1)
+
+#mixer = audiomixer.Mixer(sample_rate=44100, buffer_size=2048)
+mixer = audiomixer.Mixer(voice_count=2, sample_rate=44100, channel_count=1, buffer_size=2048)
+
+synth = synthio.Synthesizer(sample_rate=44100)
+audio.play(mixer)
+mixer.voice[0].play(synth)
+mixer.voice[0].level = 0.1 # volume
+mixer.voice[1].level = 0.9 # tare volume
+
+
+#For the screaming
+scream = False
+note = 80
+baseNote = 80 #jerome's preferred sound
+minTimeBeeps = 0.2 #when nothing on scale
+timeBetweenBeeps = 0.2
+maxTimeBeeps = 0.05 #when goal reached
+slopeTimeBeeps = (maxTimeBeeps - minTimeBeeps)/100
+
+#on startup
+#little wakeup song
+startupSequence = True
+
+#3 notes
+note1 = 58
+note2 = 63
+note3 = 65
+
+#amount to be added to the cup
+targetmL = 100
+
+#how many times we measure to calibrate
+nbMeasure = 12
+
+#Reset Button
+resetButton = digitalio.DigitalInOut(board.A0)
+resetButton.direction = digitalio.Direction.INPUT
+resetButton.pull = digitalio.Pull.UP
+
+#reset button song
+resetSongNote1 = 85
+resetSongNote2 = 65
+resetSongNote3 = 62
+
+#+25 BUTTON
+button25 = digitalio.DigitalInOut(board.A7) #RX
+button25.direction = digitalio.Direction.INPUT
+button25.pull = digitalio.Pull.UP
+
+#+25 button song
+button25SongNote1 = 75
+button25SongNote2 = 77
+
+#CONFIRM BUTTON
+buttonConfirm = digitalio.DigitalInOut(board.SCK) #SCK
+buttonConfirm.direction = digitalio.Direction.INPUT
+buttonConfirm.pull = digitalio.Pull.UP
+
+#CONFIRM BUTTON
+buttonConfirmSongNote1 = 78
+buttonConfirmSongNote2 = 80
+buttonConfirmSongNote3 = 82
+
+#+100 BUTTON
+button100 = digitalio.DigitalInOut(board.TX) #A6
+button100.direction = digitalio.Direction.INPUT
+button100.pull = digitalio.Pull.UP
+
+#+100 button song
+button100SongNote1 = 81
+button100SongNote2 = 83
+
+#--------------------------CODE-----------------------------------------------------
+
+####################-------FUNCTIONS------########################################
+
+#-----------RESET BUTTON FUNCTION----------
+
+def talk(name_sounds): # function that will hold the numbers measures 
+    with open(name_sounds, "rb") as folder_audio:
+        wave = audiocore.WaveFile(folder_audio)
+        mixer.voice[1].play(wave)     
+        while mixer.voice[1].playing:
+            pass
+
+def reset():
+    print("reset")
+
+    #play sound (starts the song)
+    synth.press(resetSongNote1)
+    time.sleep(0.2)
+    synth.release(resetSongNote1)  # release the note we pressed
+    synth.press(resetSongNote2) 
+    time.sleep(0.1)
+    synth.release(resetSongNote2)   
+
+    #calibrate load cell
+    #get a bunch of measures and add them up
+    sumMeasures = 0
+    countedMeasures = 0
+    for i in range(nbMeasure):
+        #preventing weird readings
+        if channel_a.value < 700000:
+            sumMeasures = channel_a.value + sumMeasures
+            countedMeasures = countedMeasures + 1
+        time.sleep(0.1)
+    #calculate the average assign it to resetValue
+    print("Current value:")
+    print(sumMeasures/countedMeasures)
+    resetValue = int(sumMeasures/countedMeasures)
+    print("value reset to:")
+    print(resetValue)
+
+    #Voice says Reinitialiser SOPHIE
+    with open("tare.wav", "rb") as folder_audio:
+        wave = audiocore.WaveFile(folder_audio)
+        mixer.voice[1].play(wave)
+        while mixer.voice[1].playing:
+            pass
+        
+
+    #continue song
+    synth.release(resetSongNote1)  # release the note we pressed
+    synth.press(resetSongNote2) 
+    time.sleep(0.1)
+    synth.release(resetSongNote2)  # release the note we pressed
+    synth.press(resetSongNote3)  
+    time.sleep(0.2)
+    synth.release(resetSongNote3)  # release the note we pressed
+    
+    return resetValue
+
+#-----------+25 BUTTON FUNCTION----------
+def add25(targetmL):
+    print("+25")
+    targetmL = targetmL + 25
+    if targetmL > 500:
+        targetmL = 500
+
+    #SOUND CUES
+    synth.press(button25SongNote1)
+    time.sleep(0.1)
+    synth.release(button25SongNote1)  # release the note we pressed
+    synth.press(button25SongNote2) 
+    time.sleep(0.2)
+    synth.release(button25SongNote2)  # release the note we pressed
+    
+    talk("25.wav") # sound file for 25 
+    return targetmL
+
+
+#-----------CONFIRM BUTTON FUNCTION----------
+def confirm(targetmL):
+    print("confirmed")
+    
+    #SOUND CUES
+    synth.press(buttonConfirmSongNote1)
+    time.sleep(0.2)
+    synth.release(buttonConfirmSongNote1)  # release the note we pressed
+    synth.press(buttonConfirmSongNote2) 
+    time.sleep(0.1)
+    synth.release(buttonConfirmSongNote2)  # release the note we pressed
+    synth.press(buttonConfirmSongNote3)
+    time.sleep(0.1)
+    synth.release(buttonConfirmSongNote3)
+    synth.press(buttonConfirmSongNote2)
+    time.sleep(0.3)
+    synth.release(buttonConfirmSongNote2)
+
+    # READ THE TARGET VALUE OUT LOUD
+    #SOPHIE HERE
+    # 4 space indentation to stay in the confirm function 
+    #(use the targetmL value passed as a parameter)
+    
+    cents = (targetmL // 100) * 100 # get the cents numbers only and then get the complete number 
+    rest = targetmL % 100 # the rest will be the 25, 50, 75 that will be added 
+
+    if cents == 100:
+        talk("100.wav")
+    elif cents == 200:
+        talk("200.wav")
+    elif cents == 300:
+        talk("300.wav")
+    elif cents == 400:
+        talk("400.wav")
+    elif cents == 500:
+        talk("500.wav")
+
+    if rest == 25:
+        talk("25.wav")
+    elif rest == 50:
+        talk("50.wav")
+    elif rest == 75:
+        talk("75.wav")
+
+    if targetmL > 0:
+        talk("ml.wav") 
+    
+    time.sleep(1)
+            
+    return
+
+
+#-----------+100 BUTTON FUNCTION----------
+def add100(targetmL):
+    print("+100")
+    targetmL = targetmL + 100
+    if targetmL > 500:
+        targetmL = 500 #make sure on the 500 range
+      #SOUND CUES
+    synth.press(button100SongNote1)
+    time.sleep(0.1)
+    synth.release(button100SongNote1)  # release the note we pressed
+    synth.press(button100SongNote2) 
+    time.sleep(0.2)
+    synth.release(button100SongNote2)  # release the note we pressed
+    
+    talk("100.wav") # sound file for 100
+    return targetmL
+
+
+#----- STARTUP SONG FUNCTION-------
+def startupSong():    
+    synth.press(note1)  # midi note 65 = F4
+    time.sleep(0.3)
+    synth.release(note1)  # release the note we pressed
+    synth.press(note2)  # midi note 65 = F4
+    time.sleep(0.1)
+    synth.release(note2)  # release the note we pressed
+    synth.press(note3)  # midi note 65 = F4
+    time.sleep(0.5)
+    synth.release(note3)  # release the note we pressed
+    time.sleep(0.2)
+    return
+
+
+#-------MAIN LOOP----------------
+
+while True:
+    if startupSequence == True:
+        startupSong()
+        startupSequence = False
+        print("end song")
+
+    if startupSequence == False:
+        if not resetButton.value:   # pressed = False (pulled to GND)
+            scream = False
+            resetValue = reset()
+            #reset the target amount
+            targetmL = 0
+        if not button25.value:   # pressed = False (pulled to GND)
+            targetmL = add25(targetmL)
+        if not buttonConfirm.value:   # pressed = False (pulled to GND)
+            confirm(targetmL)
+            scream = True
+        if not button100.value:   # pressed = False (pulled to GND)
+            targetmL = add100(targetmL)
+            print(targetmL)
+
+
+    #------ MEASURED SCREAMING --------
+    if scream == True:
+        print(f"number: {channel_a.value}mL")
+        if channel_a.value > resetValue and channel_a.value < 1000000:
+        # read value on scale
+            print(f"Reading: {channel_a.value}")
+        #calculating gram/mL value
+            if channel_a.value > (resetValue - 100):
+                mass = (channel_a.value - resetValue)/slope
+            print(f"Value: {mass}mL")
+
+        #change beep speed to match value
+        #lots of safeguards here because I was getting random negative values sometimes that would crash the code
+            if targetmL > 0:
+                newTimeBetweenBeeps = (100*mass/targetmL)*slopeTimeBeeps + minTimeBeeps
+                if newTimeBetweenBeeps > 0:
+                    timeBetweenBeeps = newTimeBetweenBeeps
+                #every 10% i also want to up the note by 1
+                    note = baseNote + (int)(20*mass/targetmL)
+            print(timeBetweenBeeps)
+        #play sound
+    
+            synth.press(note)  # midi note 65 = F4
+            time.sleep(0.1)
+            synth.release(note)  # release the note we pressed
+            time.sleep(timeBetweenBeeps)
+        
+
+            if mass > targetmL:
+               scream = False
+            
+            
